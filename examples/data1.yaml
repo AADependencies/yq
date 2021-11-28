@@ -1,2 +1,15 @@
-a:
-  include: 'data2.yaml'
+strings:
+  - a: banana
+  - a: cat
+  - a: apple
+
+numbers:
+  - a: 12
+  - a: 13
+  - a: 120
+
+
+obj:
+  - a: {cat: "adog"}
+  - a: {cat: "doga"}
+  - a: apple
