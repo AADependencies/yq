@@ -7,6 +7,20 @@ import (
 var collectObjectOperatorScenarios = []expressionScenario{
 	{
 		skipDoc:    true,
+		expression: `{"name": "mike"} | .name`,
+		expected: []string{
+			"D0, P[name], (!!str)::mike\n",
+		},
+	},
+	{
+		skipDoc:    true,
+		expression: `{"person": {"names": ["mike"]}} | .person.names[0]`,
+		expected: []string{
+			"D0, P[person names 0], (!!str)::mike\n",
+		},
+	},
+	{
+		skipDoc:    true,
 		document:   `[{name: cat}, {name: dog}]`,
 		expression: `.[] | {.name: "great"}`,
 		expected: []string{
@@ -15,11 +29,28 @@ var collectObjectOperatorScenarios = []expressionScenario{
 		},
 	},
 	{
+		description: "collect splat",
+		skipDoc:     true,
+		document:    `[{name: cat}, {name: dog}]`,
+		expression:  `.[] | {.name: "great"}[]`,
+		expected: []string{
+			"D0, P[cat], (!!str)::great\n",
+			"D0, P[dog], (!!str)::great\n",
+		},
+	},
+	{
+		skipDoc:    true,
+		expression: `({} + {}) | (.b = 3)`,
+		expected: []string{
+			"D0, P[], (!!map)::b: 3\n",
+		},
+	},
+	{
 		skipDoc:    true,
 		document:   "a: []",
 		expression: `.a += [{"key": "att2", "value": "val2"}]`,
 		expected: []string{
-			"D0, P[], (doc)::a: [{key: att2, value: val2}]\n",
+			"D0, P[], (!!map)::a:\n    - key: att2\n      value: val2\n",
 		},
 	},
 	{
@@ -55,22 +86,24 @@ var collectObjectOperatorScenarios = []expressionScenario{
 		},
 	},
 	{
-		skipDoc:    true,
-		document:   "{name: Mike}\n",
-		document2:  "{name: Bob}\n",
-		expression: `{"wrap": .}`,
+		skipDoc:     true,
+		description: "Two documents",
+		document:    "{name: Mike}\n",
+		document2:   "{name: Bob}\n",
+		expression:  `{"wrap": .}`,
 		expected: []string{
 			"D0, P[], (!!map)::wrap: {name: Mike}\n",
 			"D0, P[], (!!map)::wrap: {name: Bob}\n",
 		},
 	},
 	{
-		skipDoc:    true,
-		document:   "{name: Mike}\n---\n{name: Bob}",
-		expression: `{"wrap": .}`,
+		skipDoc:     true,
+		description: "two embedded documents",
+		document:    "{name: Mike}\n---\n{name: Bob}",
+		expression:  `{"wrap": .}`,
 		expected: []string{
 			"D0, P[], (!!map)::wrap: {name: Mike}\n",
-			"D0, P[], (!!map)::wrap: {name: Bob}\n",
+			"D1, P[], (!!map)::wrap: {name: Bob}\n",
 		},
 	},
 	{
@@ -98,8 +131,8 @@ var collectObjectOperatorScenarios = []expressionScenario{
 		expected: []string{
 			"D0, P[], (!!map)::Mike: cat\n",
 			"D0, P[], (!!map)::Mike: dog\n",
-			"D0, P[], (!!map)::Rosey: monkey\n",
-			"D0, P[], (!!map)::Rosey: sheep\n",
+			"D1, P[], (!!map)::Rosey: monkey\n",
+			"D1, P[], (!!map)::Rosey: sheep\n",
 		},
 	},
 	{
@@ -115,10 +148,12 @@ var collectObjectOperatorScenarios = []expressionScenario{
 	},
 	{
 		skipDoc:    true,
-		document:   `{name: Mike, pets: {cows: [apl, bba]}}`,
+		document:   "name: Mike\npets:\n  cows:\n    - apl\n    - bba",
+		document2:  "name: Rosey\npets:\n  sheep:\n    - frog\n    - meow",
 		expression: `{"a":.name, "b":.pets}`,
 		expected: []string{
-			"D0, P[], (!!map)::a: Mike\nb: {cows: [apl, bba]}\n",
+			"D0, P[], (!!map)::a: Mike\nb:\n    cows:\n        - apl\n        - bba\n",
+			"D0, P[], (!!map)::a: Rosey\nb:\n    sheep:\n        - frog\n        - meow\n",
 		},
 	},
 	{
@@ -127,6 +162,13 @@ var collectObjectOperatorScenarios = []expressionScenario{
 		expression:  `{"wrap": "frog"}`,
 		expected: []string{
 			"D0, P[], (!!map)::wrap: frog\n",
+		},
+	},
+	{
+		skipDoc:    true,
+		expression: `{"wrap": "frog", "bing": "bong"}`,
+		expected: []string{
+			"D0, P[], (!!map)::wrap: frog\nbing: bong\n",
 		},
 	},
 	{
@@ -145,11 +187,18 @@ var collectObjectOperatorScenarios = []expressionScenario{
 			"D0, P[], (!!map)::{wrap: {further: {name: Mike}}}\n",
 		},
 	},
+	{
+		description: "Creating yaml from scratch with multiple objects",
+		expression:  `(.a.b = "foo") | (.d.e = "bar")`,
+		expected: []string{
+			"D0, P[], ()::a:\n    b: foo\nd:\n    e: bar\n",
+		},
+	},
 }
 
 func TestCollectObjectOperatorScenarios(t *testing.T) {
 	for _, tt := range collectObjectOperatorScenarios {
 		testScenario(t, &tt)
 	}
-	documentScenarios(t, "create-collect-into-object", collectObjectOperatorScenarios)
+	documentOperatorScenarios(t, "create-collect-into-object", collectObjectOperatorScenarios)
 }

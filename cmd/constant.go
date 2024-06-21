@@ -1,11 +1,15 @@
 package cmd
 
-var leadingContentPreProcessing = true
-var unwrapScalar = true
+var unwrapScalarFlag = newUnwrapFlag()
+
+var unwrapScalar = false
 
 var writeInplace = false
 var outputToJSON = false
-var outputFormat = "yaml"
+
+var outputFormat = ""
+
+var inputFormat = ""
 
 var exitStatus = false
 var forceColor = false
@@ -14,6 +18,7 @@ var colorsEnabled = false
 var indent = 2
 var noDocSeparators = false
 var nullInput = false
+var nulSepOutput = false
 var verbose = false
 var version = false
 var prettyPrint = false
@@ -22,5 +27,10 @@ var prettyPrint = false
 var frontMatter = ""
 
 var splitFileExp = ""
+var splitFileExpFile = ""
 
 var completedSuccessfully = false
+
+var forceExpression = ""
+
+var expressionFile = ""

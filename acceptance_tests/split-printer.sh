@@ -25,6 +25,56 @@ EOM
   assertEquals "$expectedDoc2" "$doc2"
 }
 
+testBasicSplitWithNameCustomExtension() {
+  rm test*.yaml || true
+  cat >test.yml <<EOL
+a: test_doc1
+--- 
+a: test_doc2
+EOL
+
+  ./yq e test.yml -s '.a + ".yaml"'
+
+  doc1=$(cat test_doc1.yaml)
+  
+  assertEquals "a: test_doc1" "$doc1"
+
+  doc2=$(cat test_doc2.yaml)
+  read -r -d '' expectedDoc2 << EOM
+---
+a: test_doc2
+EOM
+  assertEquals "$expectedDoc2" "$doc2"
+}
+
+
+
+
+testSplitFromFile() {
+  cat >test.yml <<EOL
+a: test_doc1
+--- 
+a: test_doc2
+EOL
+
+cat >test_splitExp.yml <<EOL
+.a
+EOL
+
+  ./yq test.yml --split-exp-file test_splitExp.yml
+
+  doc1=$(cat test_doc1.yml)
+  
+  assertEquals "a: test_doc1" "$doc1"
+
+  doc2=$(cat test_doc2.yml)
+  read -r -d '' expectedDoc2 << EOM
+---
+a: test_doc2
+EOM
+  assertEquals "$expectedDoc2" "$doc2"
+}
+
 testBasicSplitWithNameEvalAll() {
   cat >test.yml <<EOL
 a: test_doc1
